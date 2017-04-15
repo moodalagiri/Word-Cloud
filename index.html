@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="d3.layout.cloud.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+<head>
+    <title>Word Cloud and Word Tree Example</title>
+</head>
+<style>
+    body {
+        font-family:"Lucida Grande","Droid Sans",Arial,Helvetica,sans-serif;
+    }
+    .legend {
+        border: 1px solid #555555;
+        border-radius: 5px 5px 5px 5px;
+        font-size: 0.8em;
+    }
+    .bld {
+        font-weight: bold;
+    }
+</style>
+<script>
+
+</script>
+<body>
+<div class="w3-container">
+    <div class = "w3-card-4">
+        <header class="w3-container w3-blue">
+			<h1><center>WORD CLOUD AND WORD TREE</center></h1>
+		</header>
+		<div class = "w3-container">
+			<div>
+				<div id="cloud" style=" width:50%; float:left; border-right:thick solid #ff0000; line-height:400px;">
+				</div>
+				<div id="wordtree" style="width:50%; float	:right;">
+				</div>
+			</div>
+			<div style="text-align:center;">
+				<textarea id="inputtext" style="border: 1px solid #0000ff; width: 800px; height: 100px;" placeholder="Enter Text"></textarea>
+				<center> 
+				<button style="cursor:pointer;background-color:#4CAF50;border:none;font-size:20px;" type="button" onclick = "displayCloudTree()">Generate Word Cloud and Word Tree</button>
+				<button style="cursor:pointer;background-color:#f44336;;border:none;font-size:20px;" type="button" onclick="cancelCloudTree()">Cancel</button></center>
+				<br>
+			</div>
+        </div>
+	</div>
+</body>
+<script>
+function displayCloudTree(){
+document.getElementById("cloud").innerHTML = "";
+var frequency_list = [];
+var wordtext= document.getElementById("inputtext").value;
+//count word frequency
+wordFreqMap = wordFrequency(wordtext);
+
+for(key in wordFreqMap){
+var wordobj={};
+wordobj["text"]=key;
+wordobj["size"]=wordFreqMap[key]*25;
+frequency_list.push(wordobj);
+}
+
+var fill = d3.scale.category20();
+var layout = d3.layout.cloud()
+    .size([500, 500])
+    .words(frequency_list)
+    .padding(5)
+    .rotate(function() { return ~~(Math.random() * 2) * 90; })
+    .font("Impact")
+    .fontSize(function(d) { return d.size; })
+    .on("end", draw);
+
+layout.start();
+
+function draw(words) {
+  d3.select("#cloud").append("svg")
+      .attr("width", layout.size()[0])
+      .attr("height", layout.size()[1])
+	  .append("g")
+      .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+      .selectAll("text")
+      .data(words)
+      .enter().append("text")
+	  .style("text-align","light")
+      .style("font-size", function(d) { return d.size + "px"; })
+      .style("font-family", "Impact")
+      .style("fill", function(d, i) { return fill(i); })
+      .attr("text-anchor", "middle")
+      .attr("transform", function(d) {
+        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+      })
+      .text(function(d) { return d.text; });
+}
+drawWordTree(wordtext);
+}
+
+function wordFrequency(string) {
+    var words = string.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g, '').split(/\s/);
+    var freqMap = {};
+    words.forEach(function(w) {
+		if (!freqMap[w]) {
+            freqMap[w] = 0;
+        }
+        freqMap[w] += 1;
+    });
+    return freqMap;
+}
+
+function cancelCloudTree(){
+document.getElementById("cloud").innerHTML = "";
+}
+
+function drawWordTree(){
+google.charts.load('current', {packages:['wordtree']});
+google.charts.setOnLoadCallback(drawChart);
+}
+
+function drawChart() {
+	var phraseOuterArray = [];
+	var wordtext= document.getElementById("inputtext").value;
+	var words = wordtext.match(/\(?[^\.\?\!]+[\.!\?]\)?/g);
+	var addOnce = false;
+	for(i=0; i<words.length; i++)
+	{
+		if(!addOnce)
+		{
+			var phrase = ['Phrases'];
+			phraseOuterArray.push(phrase);
+			addOnce = true;
+		}
+		var phraseInnerArray=[];
+		words[i]=words[i].replace(/[&\/\\#,+()$~%.'":*?<>{}]/g,'');
+		phraseInnerArray.push(words[i]);
+		phraseOuterArray.push(phraseInnerArray);
+	}
+	var data = google.visualization.arrayToDataTable(phraseOuterArray);
+
+	var options = {
+	  wordtree: {
+		format: 'implicit',
+		word: ' '
+	  }
+	};
+
+	var chart = new google.visualization.WordTree(document.getElementById('wordtree'));
+	chart.draw(data, options);
+}
+
+</script>
+
+</html>
